@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>正在打开咪咕视频</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-width: 320px;
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        color: #222222;
+        background: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      .fallback {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+
+      .fallback.is-visible {
+        opacity: 1;
+      }
+
+      .status {
+        margin: 0 0 20px;
+        color: #666666;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .open-button {
+        min-width: 184px;
+        min-height: 48px;
+        padding: 12px 24px;
+        color: #ffffff;
+        background: #1677ff;
+        border: 0;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .open-button:active {
+        background: #0958d9;
+      }
+
+      .open-button:focus-visible {
+        outline: 3px solid rgba(22, 119, 255, 0.28);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="fallback" id="fallback">
+      <p class="status" id="status">若未自动打开，请点击下方按钮。</p>
+      <button class="open-button" id="openButton" type="button">打开咪咕视频</button>
+    </main>
+
+    <script>
+      const TARGET_URL = 'https://union-passport.migu.cn/saishi/pages/tabs/ticketPackage?miguToken=SSOTOKEN&hiddenTabbar=true'
+      const LAUNCH_PAGE_URL = 'https://www.miguvideo.com/mgs/common/migugotoapp/gotoapp.html'
+
+      const fallback = document.querySelector('#fallback')
+      const status = document.querySelector('#status')
+      const openButton = document.querySelector('#openButton')
+      const previewMode = new URLSearchParams(window.location.search).get('preview')
+
+      const buildLaunchUrl = () => {
+        const action = JSON.stringify({
+          type: 'JUMP_H5_BY_WEB_VIEW',
+          params: { url: TARGET_URL },
+        })
+
+        const launchUrl = new URL(LAUNCH_PAGE_URL)
+        launchUrl.searchParams.set('action', action)
+        launchUrl.searchParams.set('urlTimeStamp', String(Date.now()))
+        return launchUrl.toString()
+      }
+
+      const openMiguVideo = () => {
+        openButton.disabled = true
+        openButton.textContent = '正在打开...'
+        window.location.assign(buildLaunchUrl())
+
+        window.setTimeout(() => {
+          openButton.disabled = false
+          openButton.textContent = '重新打开咪咕视频'
+          fallback.classList.add('is-visible')
+        }, 2000)
+      }
+
+      openButton.addEventListener('click', openMiguVideo)
+
+      if (previewMode) {
+        if (previewMode !== 'blank') {
+          status.textContent = '预览模式：正式访问时将自动打开咪咕视频。'
+          fallback.classList.add('is-visible')
+        }
+      } else {
+        window.setTimeout(() => fallback.classList.add('is-visible'), 1200)
+        openMiguVideo()
+      }
+
+      window.addEventListener('pageshow', (event) => {
+        if (!event.persisted) return
+        openButton.disabled = false
+        openButton.textContent = '重新打开咪咕视频'
+        fallback.classList.add('is-visible')
+      })
+    </script>
+  </body>
+</html>
